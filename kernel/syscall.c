@@ -101,9 +101,11 @@ extern uint64 sys_unlink(void);
 extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
+extern uint64 sys_trace(void);
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
+
 static uint64 (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
 [SYS_exit]    sys_exit,
@@ -126,13 +128,47 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
+[SYS_trace]   sys_trace,
+};
+
+char *syscall_strings[] = {
+"dummy",  // 0 system call doesnot exist
+"fork",
+"exit",
+"wait",
+"pipe",
+"read",
+"kill",
+"exec",
+"fstat",
+"chdir",
+"dup",
+"getpid",
+"sbrk",
+"sleep",
+"uptime",
+"open",
+"write",
+"mknod",
+"unlink",
+"link",
+"mkdir",
+"close",
+"trace",
+};
+
+int syscall_argcount[] = {
+  -1,         // 0 system call doesnot exist
+  0, 1, 1, 0, 3, 2, 2, 1, 1, 1, 0, 1, 1, 0, 2, 3, 3, 1, 2, 1, 1, 1, 
 };
 
 void
 syscall(void)
 {
   int num;
+  int n;
   struct proc *p = myproc();
+  n = p->tracing;
 
   num = p->trapframe->a7;
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
@@ -143,5 +179,24 @@ syscall(void)
     printf("%d %s: unknown sys call %d\n",
             p->pid, p->name, num);
     p->trapframe->a0 = -1;
+  }
+  
+  // int arg_count = syscall_argcount[num];
+  
+  if(n & (1 << num)){
+    printf("%d: syscall %s ( ", p->pid, syscall_strings[num]);
+
+    //  arg_count >= 1 ? printf("%d ", p->trapframe->a1) : 0;
+    //  arg_count >= 2 ? printf("%d ", p->trapframe->a2) : 0;
+    //  arg_count >= 3 ? printf("%d ", p->trapframe->a3) : 0;
+     printf("%d ", p->trapframe->a1);
+     printf("%d ", p->trapframe->a2);
+     printf("%d ", p->trapframe->a3);
+     printf("%d ", p->trapframe->a4);
+     printf("%d ", p->trapframe->a5);
+     printf("%d ", p->trapframe->a6);
+     printf("%d ", p->trapframe->a7);
+
+    printf(") -> %d\n", p->trapframe->a0);
   }
 }
