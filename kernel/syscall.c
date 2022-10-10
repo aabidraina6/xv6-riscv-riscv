@@ -166,11 +166,9 @@ void
 syscall(void)
 {
   int num;
-  int n;
   struct proc *p = myproc();
-  n = p->tracing;
-
   num = p->trapframe->a7;
+
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     // Use num to lookup the system call function for num, call it,
     // and store its return value in p->trapframe->a0
@@ -180,23 +178,16 @@ syscall(void)
             p->pid, p->name, num);
     p->trapframe->a0 = -1;
   }
-  
-  // int arg_count = syscall_argcount[num];
-  
-  if(n & (1 << num)){
-    printf("%d: syscall %s ( ", p->pid, syscall_strings[num]);
+  int arg_count = syscall_argcount[num];
 
-    //  arg_count >= 1 ? printf("%d ", p->trapframe->a1) : 0;
-    //  arg_count >= 2 ? printf("%d ", p->trapframe->a2) : 0;
-    //  arg_count >= 3 ? printf("%d ", p->trapframe->a3) : 0;
-     printf("%d ", p->trapframe->a1);
-     printf("%d ", p->trapframe->a2);
-     printf("%d ", p->trapframe->a3);
-     printf("%d ", p->trapframe->a4);
-     printf("%d ", p->trapframe->a5);
-     printf("%d ", p->trapframe->a6);
-     printf("%d ", p->trapframe->a7);
+  if(p->tracing & (1 << num)){
+    p = myproc();
+    printf("%d: syscall %s (", p->pid, syscall_strings[num]);
 
-    printf(") -> %d\n", p->trapframe->a0);
+     arg_count >= 1 ? printf("%d ", p->trapframe->a1) : 0;
+     arg_count >= 2 ? printf("%d ", p->trapframe->a2) : 0;
+     arg_count >= 3 ? printf("%d ", p->trapframe->a3) : 0;
+
+    printf("\b) -> %d\n", p->trapframe->a0);
   }
 }
