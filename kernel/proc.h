@@ -105,4 +105,8 @@ struct proc {
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
   int tracing;                 // tracemask
+  int nticks;                  // store input number of ticks
+  int ticksleft;               // ticks left until next alarm
+  uint64 handler;           // runs after every nticks
+  struct trapframe *saved_tf;  // saves the trapframe of interrupted process 
 };

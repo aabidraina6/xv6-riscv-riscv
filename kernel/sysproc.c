@@ -100,3 +100,18 @@ sys_trace(void)
   myproc()->tracing = n; // saving the argument
   return 0;
 }
+
+// sigalarm implementation
+
+uint64
+sys_sigalarm(void)
+{
+  int nticks;
+  uint64 handler;
+  argint(0,&nticks);
+  argaddr(1,&handler);
+  myproc()->nticks = nticks;
+  myproc()->ticksleft = nticks;
+  myproc()->handler = handler;
+  return 0;
+}
