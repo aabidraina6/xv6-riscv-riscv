@@ -169,6 +169,7 @@ freeproc(struct proc *p)
   p->killed = 0;
   p->xstate = 0;
   p->state = UNUSED;
+  p->tracing = 0;
 }
 
 // Create a user page table for a given process, with no user memory,
@@ -300,6 +301,8 @@ fork(void)
   *(np->trapframe) = *(p->trapframe);
 
   np->tracing = p->tracing;     // copy tracing value to child
+
+  np->nticks = -1 ;             // this will act as a flag in trapframe.c 
 
   // Cause fork to return 0 in the child.
   np->trapframe->a0 = 0;
