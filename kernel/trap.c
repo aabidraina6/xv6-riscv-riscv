@@ -29,6 +29,28 @@ trapinithart(void)
   w_stvec((uint64)kernelvec);
 }
 
+#ifdef MLFQ
+void q_adjust(struct proc *p){
+  if(p->state != RUNNING) return;
+  p->nticks++;
+  // add process to the same queue
+  for(int i = 0; i < p->q_index; i++){
+    if(q_data[i].size > 0){
+      p->nticks = 0;
+      q_push(p, p->q_index);
+      yield();
+      break;
+    }
+  }
+  // add process to the next lower queue
+  if(p->nticks >= q_data[p->q_index].max_ticks){
+    p->nticks = 0;
+    q_push(p, p->q_index < 4 ? p->q_index + 1 : 4);
+    yield();
+  }
+}
+#endif
+
 //
 // handle an interrupt, exception, or system call from user space.
 // called from trampoline.S
@@ -68,19 +90,16 @@ usertrap(void)
   } else if((which_dev = devintr()) != 0){
     // ok
     // sigalarm
-    if(which_dev == 2 && p->nticks>0)
-    {
+    if(which_dev == 2 && p->nticks>0){
       p->ticksleft--;
-      if(p->ticksleft == 0)
-      {
+      if(p->ticksleft == 0){
         p->saved_tf = kalloc();
-        memmove(p->saved_tf , p->trapframe,sizeof(struct trapframe));
+        memmove(p->saved_tf, p->trapframe, sizeof(struct trapframe));
         printf("ticks done\n");
         // p->ticksleft = p->nticks; 
         p->trapframe->epc = p->handler;
       }
     }
-    
   } else {
     printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
     printf("            sepc=%p stval=%p\n", r_sepc(), r_stval());
@@ -90,10 +109,19 @@ usertrap(void)
   if(killed(p))
     exit(-1);
 
-  // give up the CPU if this is a timer interrupt.
-  if(which_dev == 2)
+// give up the CPU if this is a timer interrupt.
+// no preemption in fcfs
+  if(which_dev == 2 && p){
+#ifdef RR
     yield();
-
+#endif
+#ifdef LOT
+    yield();
+#endif
+#ifdef MLFQ
+    q_adjust(p);
+#endif
+  }
   usertrapret();
 }
 
@@ -164,9 +192,23 @@ kerneltrap()
     panic("kerneltrap");
   }
 
+// yield only when scheduling is round-robin or lottery-based
   // give up the CPU if this is a timer interrupt.
-  if(which_dev == 2 && myproc() != 0 && myproc()->state == RUNNING)
-    yield();
+  struct proc *p = myproc();
+  if(which_dev == 2 && p){
+#ifdef RR
+    if(p->state == RUNNING)
+      yield();
+#endif
+#ifdef LOT
+    if(p->state == RUNNING)
+      yield();
+#endif
+#ifdef MLFQ
+    q_adjust(p);
+#endif
+  }
+
 
   // the yield() may have caused some traps to occur,
   // so restore trap registers for use by kernelvec.S's sepc instruction.
@@ -179,6 +221,7 @@ clockintr()
 {
   acquire(&tickslock);
   ticks++;
+  update_time();
   wakeup(&ticks);
   release(&tickslock);
 }

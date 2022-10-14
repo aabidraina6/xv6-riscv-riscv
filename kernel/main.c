@@ -31,6 +31,23 @@ main()
     userinit();      // first user process
     __sync_synchronize();
     started = 1;
+
+#ifdef RR
+  printf("scheduler: RR\n");
+#endif
+#ifdef FCFS
+  printf("scheduler: FCFS\n");
+#endif
+#ifdef MLFQ
+  printf("scheduler: MLFQ\n");
+#endif
+#ifdef PBS
+  printf("scheduler: PBS\n");
+#endif
+#ifdef LOT
+  printf("scheduler: LOT\n");
+#endif
+
   } else {
     while(started == 0)
       ;
@@ -40,6 +57,10 @@ main()
     trapinithart();   // install kernel trap vector
     plicinithart();   // ask PLIC for device interrupts
   }
+
+  #ifdef MLFQ
+    q_init();
+  #endif
 
   scheduler();        
 }

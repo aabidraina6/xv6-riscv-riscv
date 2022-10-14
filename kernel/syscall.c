@@ -84,6 +84,7 @@ extern uint64 sys_fork(void);
 extern uint64 sys_exit(void);
 extern uint64 sys_wait(void);
 extern uint64 sys_pipe(void);
+extern uint64 sys_waitx(void);
 extern uint64 sys_read(void);
 extern uint64 sys_kill(void);
 extern uint64 sys_exec(void);
@@ -101,8 +102,13 @@ extern uint64 sys_unlink(void);
 extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
+
+// new system calls
 extern uint64 sys_trace(void);
 extern uint64 sys_sigalarm(void);
+extern uint64 sys_waitx(void);
+extern uint64 sys_setpriority(void);
+extern uint64 sys_settickets(void);
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
@@ -130,7 +136,10 @@ static uint64 (*syscalls[])(void) = {
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
 [SYS_trace]   sys_trace,
-[SYS_sigalarm] sys_sigalarm,
+[SYS_sigalarm]sys_sigalarm,
+[SYS_waitx]   sys_waitx,
+[SYS_setpriority] sys_setpriority,
+[SYS_settickets] sys_settickets
 };
 
 char *syscall_strings[] = {
@@ -157,12 +166,15 @@ char *syscall_strings[] = {
 "mkdir",
 "close",
 "trace",
-"sigalarm"
+"sigalarm",
+"waitx",
+"setpriority",
+"settickets"
 };
 
 int syscall_argcount[] = {
-  -1,         // 0 system call doesnot exist
-  0, 1, 1, 0, 3, 2, 2, 1, 1, 1, 0, 1, 1, 0, 2, 3, 3, 1, 2, 1, 1, 1, 2,
+  -1,         // 0 system call does not exist
+  0, 1, 1, 0, 3, 2, 2, 1, 1, 1, 0, 1, 1, 0, 2, 3, 3, 1, 2, 1, 1, 1, 2, 3, 1, 1
 };
 
 void
@@ -171,6 +183,12 @@ syscall(void)
   int num;
   struct proc *p = myproc();
   num = p->trapframe->a7;
+
+  // save arguments before calling syscall
+  int a0 = p->trapframe->a0;
+  int a1 = p->trapframe->a1;
+  int a2 = p->trapframe->a2;
+
 
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     // Use num to lookup the system call function for num, call it,
@@ -187,9 +205,9 @@ syscall(void)
     p = myproc();
     printf("%d: syscall %s (", p->pid, syscall_strings[num]);
 
-     arg_count >= 1 ? printf("%d ", p->trapframe->a1) : 0;
-     arg_count >= 2 ? printf("%d ", p->trapframe->a2) : 0;
-     arg_count >= 3 ? printf("%d ", p->trapframe->a3) : 0;
+     arg_count >= 1 ? printf("%d ", a0) : 0;
+     arg_count >= 2 ? printf("%d ", a1) : 0;
+     arg_count >= 3 ? printf("%d ", a2) : 0;
 
     printf("\b) -> %d\n", p->trapframe->a0);
   }

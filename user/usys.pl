@@ -36,5 +36,10 @@ entry("getpid");
 entry("sbrk");
 entry("sleep");
 entry("uptime");
+
+# new system calls
 entry("trace");
 entry("sigalarm");
+entry("waitx");
+entry("setpriority");
+entry("settickets");
