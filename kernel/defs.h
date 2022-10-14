@@ -1,3 +1,5 @@
+#include "param.h"
+
 struct buf;
 struct context;
 struct file;
@@ -101,11 +103,15 @@ void            sched(void);
 void            sleep(void*, struct spinlock*);
 void            userinit(void);
 int             wait(uint64);
+int             waitx(uint64, uint*, uint*);
 void            wakeup(void*);
 void            yield(void);
 int             either_copyout(int user_dst, uint64 dst, void *src, uint64 len);
 int             either_copyin(void *dst, int user_src, uint64 src, uint64 len);
 void            procdump(void);
+void            update_time(void);
+int             setpriority(int, int);
+int             settickets(int);
 
 // swtch.S
 void            swtch(struct context*, struct context*);
@@ -185,8 +191,22 @@ void            virtio_disk_init(void);
 void            virtio_disk_rw(struct buf *, int);
 void            virtio_disk_intr(void);
 
-// trace.h
-int             trace(int);
+// mlfq.c
+struct mlfq_t;
+void q_init();
+void q_push(struct proc *p, int q_index);
+struct proc* q_pop(int q_index);
+void q_del(struct proc *p, int q_index);
+struct mlfq_t {
+	struct proc *process[NPROC];
+    int size, max_ticks;
+};
+extern struct mlfq_t q_data[5];
+
+// prng.c
+long random_at_most(long);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
+
+#define NULL 0

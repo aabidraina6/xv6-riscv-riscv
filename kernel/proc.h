@@ -104,9 +104,34 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+  
   int tracing;                 // tracemask
   int nticks;                  // store input number of ticks
   int ticksleft;               // ticks left until next alarm
-  uint64 handler;           // runs after every nticks
-  struct trapframe *saved_tf;  // saves the trapframe of interrupted process 
+  uint64 handler;              // runs after every nticks
+  struct trapframe *saved_tf;  // saves the trapframe of interrupted process
+  uint rtime;                  // How long the process ran for
+  uint ctime;                  // When was the process created 
+  uint etime;                  // When did the process exited
+  uint stime;                  // How long the process slept
+
+#ifdef MLFQ
+  int q_waiting;
+  int q_index;
+  int q_ticks;
+  int q_within;
+  int q_entered;
+  int q_times[5];
+#endif
+
+#ifdef PBS
+  int priority;
+  int niceness;
+#endif
+
+#ifdef LOT
+  int tickets;
+#endif
+
+  int sched_count;
 };

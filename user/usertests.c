@@ -819,6 +819,11 @@ killstatus(char *s)
 void
 preempt(char *s)
 {
+#ifndef RR
+  printf("preempt test skipped because scheduler is not RR\n");
+  return;
+#endif
+
   int pid1, pid2, pid3;
   int pfds[2];
 

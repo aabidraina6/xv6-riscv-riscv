@@ -4,6 +4,7 @@ struct stat;
 int fork(void);
 int exit(int) __attribute__((noreturn));
 int wait(int*);
+int waitx(int*, int* /*wtime*/, int* /*rtime*/);
 int pipe(int*);
 int write(int, const void*, int);
 int read(int, void*, int);
@@ -22,8 +23,6 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
-int trace(int);
-int sigalarm(int , void*);
 
 // ulib.c
 int stat(const char*, struct stat*);
@@ -41,3 +40,9 @@ void free(void*);
 int atoi(const char*);
 int memcmp(const void *, const void *, uint);
 void *memcpy(void *, const void *, uint);
+
+// new system calls
+int trace(int);
+int sigalarm(int , void*);
+int setpriority(int, int);
+int settickets(int);

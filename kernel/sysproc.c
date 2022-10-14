@@ -36,6 +36,23 @@ sys_wait(void)
 }
 
 uint64
+sys_waitx(void)
+{
+  uint64 addr, addr1, addr2;
+  uint wtime, rtime;
+  argaddr(0, &addr);
+  argaddr(1, &addr1); // user virtual memory
+  argaddr(2, &addr2);
+  int ret = waitx(addr, &wtime, &rtime);
+  struct proc* p = myproc();
+  if (copyout(p->pagetable, addr1,(char*)&wtime, sizeof(int)) < 0)
+    return -1;
+  if (copyout(p->pagetable, addr2,(char*)&rtime, sizeof(int)) < 0)
+    return -1;
+  return ret;
+}
+
+uint64
 sys_sbrk(void)
 {
   uint64 addr;
@@ -110,8 +127,34 @@ sys_sigalarm(void)
   uint64 handler;
   argint(0,&nticks);
   argaddr(1,&handler);
-  myproc()->nticks = nticks;
-  myproc()->ticksleft = nticks;
-  myproc()->handler = handler;
+  struct proc *p = myproc();
+  p->nticks = nticks;
+  p->ticksleft = nticks;
+  p->handler = handler;
+  return 0;
+}
+
+uint64
+sys_setpriority(void){
+#ifdef PBS
+  int priority, pid;
+  argint(0, &priority);
+  argint(1, &pid);
+  return setpriority(priority, pid);
+#else
+  printf("setpriority is available only when using priority-based scheduler\n");
+#endif
+  return 0;
+}
+
+uint64
+sys_settickets(void){
+#ifdef LOT
+  int n;
+  argint(0, &n);
+  myproc()->tickets = n;
+#else
+  printf("settickets is available only when using lottery-based scheduler\n");
+#endif
   return 0;
 }
