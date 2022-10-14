@@ -21,8 +21,8 @@ main(int argc, char ** argv)
     }  
   } else {
     int rtime, wtime;
-    waitx(0, &wtime, &rtime);
-    // similkar to wait
+    waitx(0, &rtime, &wtime);
+    // similar to wait
     printf("\nwaiting:%d\nrunning:%d\n", wtime, rtime);
   }
   exit(0);

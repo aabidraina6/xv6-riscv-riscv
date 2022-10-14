@@ -124,6 +124,8 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
+  p->tracing = p->rtime = 0;
+  p->ctime = ticks;
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -147,8 +149,6 @@ found:
   p->context.sp = p->kstack + PGSIZE;
 
   p->rtime = p->etime = p->stime = 0;
-  p->ctime = ticks;
-  p->tracing = 0;
   p->nticks = 0;
 
 #ifdef MLFQ
@@ -164,6 +164,8 @@ found:
 #ifdef LOT
   p->tickets = 1;
 #endif
+
+  p->sched_count = 0;
 
   return p;
 }
@@ -472,7 +474,7 @@ wait(uint64 addr)
 // Wait for a child process to exit and return its pid.
 // Return -1 if this process has no children.
 int
-waitx(uint64 addr, uint* wtime, uint* rtime)
+waitx(uint64 addr, uint* rtime, uint* wtime)
 {
   struct proc *np;
   int havekids, pid;
@@ -564,7 +566,7 @@ int setpriority(int priority, int pid)
       int old_priority = p->priority;
       if(myproc() != p) acquire(&p->lock);
       p->niceness = 5;
-      p->rtime = p->stime = 0;
+      p->rtime = 0;
       p->priority = priority;
       if(myproc() != p) release(&p->lock);
       if(priority < old_priority)
@@ -707,6 +709,8 @@ scheduler(void)
       }else release(&p->lock);
     }
     if(winner){
+      winner->rtime = 0;
+      winner->stime = 0;
       winner->sched_count++;
       context_switch(c, winner);
       release(&winner->lock);

@@ -43,11 +43,11 @@ sys_waitx(void)
   argaddr(0, &addr);
   argaddr(1, &addr1); // user virtual memory
   argaddr(2, &addr2);
-  int ret = waitx(addr, &wtime, &rtime);
+  int ret = waitx(addr, &rtime, &wtime);
   struct proc* p = myproc();
-  if (copyout(p->pagetable, addr1,(char*)&wtime, sizeof(int)) < 0)
+  if (copyout(p->pagetable, addr1,(char*)&rtime, sizeof(int)) < 0)
     return -1;
-  if (copyout(p->pagetable, addr2,(char*)&rtime, sizeof(int)) < 0)
+  if (copyout(p->pagetable, addr2,(char*)&wtime, sizeof(int)) < 0)
     return -1;
   return ret;
 }
