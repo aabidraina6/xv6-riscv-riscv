@@ -108,6 +108,7 @@ struct proc {
   int tracing;                 // tracemask
   int nticks;                  // store input number of ticks
   int ticksleft;               // ticks left until next alarm
+  int sigalarm_flag;           
   uint64 handler;              // runs after every nticks
   struct trapframe *saved_tf;  // saves the trapframe of interrupted process
   uint rtime;                  // How long the process ran for

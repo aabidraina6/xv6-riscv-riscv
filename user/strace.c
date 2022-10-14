@@ -1,5 +1,5 @@
-#include "kernel/types.h"
-#include "user/user.h"
+#include "../kernel/types.h"
+#include "user.h"
 
 void
 panic(char *s)
