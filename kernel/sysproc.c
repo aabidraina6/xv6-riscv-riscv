@@ -135,6 +135,19 @@ sys_sigalarm(void)
 }
 
 uint64
+sys_sigreturn(void)
+{
+  struct proc* p = myproc();
+  memmove(p->trapframe , p->saved_tf , sizeof(struct trapframe));
+  kfree(p->saved_tf);
+  p->sigalarm_flag = 0;
+  p->handler = 0;
+  p->nticks = 0;
+  p->ticksleft = 0;
+  return p->trapframe->a0;
+}
+
+uint64
 sys_setpriority(void){
 #ifdef PBS
   int priority, pid;

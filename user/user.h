@@ -46,3 +46,4 @@ int trace(int);
 int sigalarm(int , void*);
 int setpriority(int, int);
 int settickets(int);
+int sigreturn(void);
